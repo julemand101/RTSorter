@@ -1,0 +1,145 @@
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256
+{
+	/* --------------------- DEFINE OS --------------------*/
+
+	/* One OS object must be defined per CPU.
+	   This object is used to define OSEK OS properties for an OSEK application */
+  	OS LEJOS_OSEK
+	{
+		STATUS 				= EXTENDED;
+    	
+    	/* Hook routines */
+    	STARTUPHOOK 		= TRUE;
+    	ERRORHOOK 			= FALSE;
+    	SHUTDOWNHOOK 		= FALSE;
+    	PRETASKHOOK 		= FALSE;
+    	POSTTASKHOOK 		= FALSE;
+    	
+    	/* Access macros to service id and information in error hook */
+    	USEGETSERVICEID 	= FALSE;
+    	USEPARAMETERACCESS 	= FALSE;
+    	
+    	/* Defines if resource RES_SCHEDULER is used */
+    	USERESSCHEDULER 	= FALSE;
+  	};
+
+	/* Definition of application mode.
+  	   One APPMODE object is required per CPU. */
+  	APPMODE appmode1{};
+
+	/* --------------------- HW/SW TICK COUNT --------------------*/
+
+  	/* Definition of OSEK Alarm Counter */
+  	COUNTER SysTimerCount
+  	{
+	    MINCYCLE		= 1;	/* Min. allowed alarmtime (delay from start) */
+	    MAXALLOWEDVALUE = 200;	/* Maximum allowed cycle time of task (alarm) */
+	    TICKSPERBASE 	= 1;	/* One tick is equal to 1msec. Number of ticks required to reach a specific unit of the system ("Smallest value you're allowed to use in ALARMTIME and CYCLETIME") */
+  	};
+
+	/* --------------------- PUSH --------------------*/
+
+  	ALARM PUSH_ALARM
+  	{
+	    COUNTER = SysTimerCount;
+	    ACTION 	= ACTIVATETASK
+	    {
+    		TASK = PUSH;
+    	};
+	    AUTOSTART = TRUE
+	    {
+	     	ALARMTIME 	= 1; 	/* When alarm time should expire */
+	      	CYCLETIME 	= 8; 	/* Task is executed every 4msec */
+	      	APPMODE 	= appmode1;
+	    };
+  	};
+  	
+  	TASK PUSH
+  	{
+  		AUTOSTART 	= FALSE;
+  		PRIORITY	= 4;
+  		ACTIVATION	= 1;
+  		SCHEDULE 	= NON;
+  		STACKSIZE	= 512;
+  	};
+  	
+  	/* --------------------- NETWORK_RECEIVE --------------------*/
+	
+	ALARM NETWORK_RECEIVE_ALARM
+	{
+		COUNTER = SysTimerCount;
+		ACTION 	= ACTIVATETASK
+		{
+		  	TASK = NETWORK_RECEIVE;
+		};
+		AUTOSTART = TRUE
+		{
+			ALARMTIME 	= 1;
+		 	CYCLETIME 	= 12;
+		  	APPMODE 	= appmode1;
+		};
+	};
+
+	TASK NETWORK_RECEIVE
+	{
+	  AUTOSTART 	= FALSE;
+	  PRIORITY 		= 3;
+	  ACTIVATION 	= 1;
+	  SCHEDULE 		= NON;
+	  STACKSIZE 	= 512; /* Stack size */ 
+	};
+	
+	/* --------------------- NETWORK_SEND --------------------*/
+	
+	ALARM NETWORK_SEND_ALARM
+	{
+		COUNTER = SysTimerCount;
+		ACTION 	= ACTIVATETASK
+		{
+		  	TASK = NETWORK_SEND;
+		};
+		AUTOSTART = TRUE
+		{
+			ALARMTIME 	= 1;
+		 	CYCLETIME 	= 24;
+		  	APPMODE 	= appmode1;
+		};
+	};	
+
+	TASK NETWORK_SEND
+	{
+	  AUTOSTART 	= FALSE;
+	  PRIORITY 		= 2;
+	  ACTIVATION 	= 1;
+	  SCHEDULE 		= NON;
+	  STACKSIZE 	= 512; /* Stack size */ 
+	};
+
+	/* --------------------- ERROR_DETECT --------------------*/
+	
+	ALARM ERROR_DETECT_ALARM
+	{
+		COUNTER = SysTimerCount;
+		ACTION 	= ACTIVATETASK
+		{
+		  	TASK = ERROR_DETECT;
+		};
+		AUTOSTART = TRUE
+		{
+			ALARMTIME 	= 1;
+		 	CYCLETIME 	= 24;
+		  	APPMODE 	= appmode1;
+		};
+	};
+
+	TASK ERROR_DETECT
+	{
+	  AUTOSTART 	= FALSE;
+	  PRIORITY 		= 1;
+	  ACTIVATION 	= 1;
+	  SCHEDULE 		= NON;
+	  STACKSIZE 	= 512; /* Stack size */ 
+	};
+};
